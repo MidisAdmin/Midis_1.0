@@ -10,7 +10,7 @@ import midis_weather
 import midis_stocks
 import midis_art
 
-subprocess.run(["sudo", "python3", "/home/gcarson/midis_splash.py"])
+subprocess.run(["sudo", "python3", "/home/pi/midis_splash.py"])
 
 options = RGBMatrixOptions()
 options.rows = 32
@@ -26,7 +26,6 @@ font.LoadFont("/usr/local/share/midis-fonts/10x20.bdf")
 small_font = graphics.Font()
 small_font.LoadFont("/usr/local/share/midis-fonts/5x8.bdf")
 
-# Feature rotation — add new features here
 FEATURES = [
     (midis_clock, 15),
     (midis_weather, 20),
@@ -40,11 +39,29 @@ FEATURES = [
 current = 0
 screen_start = time.time()
 
+def get_brightness():
+    try:
+        sunset_hour, sunrise_hour = midis_forecast.get_sunset_sunrise()
+        now_hour = time.localtime().tm_hour
+        dim_start = sunset_hour + 1
+        dim_end = sunrise_hour - 1
+        if now_hour >= dim_start or now_hour < dim_end:
+            return 50
+        return 100
+    except:
+        return 100
+
+last_brightness = None
+
 try:
     while True:
         now = time.time()
 
-        # Baseball override
+        brightness = get_brightness()
+        if brightness != last_brightness:
+            matrix.brightness = brightness
+            last_brightness = brightness
+
         if midis_baseball.games_active():
             canvas.Clear()
             midis_baseball.draw(canvas, font, small_font)
@@ -52,7 +69,6 @@ try:
             time.sleep(0.05)
             continue
 
-        # Normal rotation
         feature, duration = FEATURES[current]
         if now - screen_start >= duration:
             current = (current + 1) % len(FEATURES)
