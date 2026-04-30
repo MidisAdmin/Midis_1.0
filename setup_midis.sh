@@ -248,9 +248,12 @@ cd ~/rpi-rgb-led-matrix/bindings/python
 cython3 --cplus rgbmatrix/core.pyx rgbmatrix/graphics.pyx
 g++ -shared -fPIC -O3 -o rgbmatrix/core.cpython-313-aarch64-linux-gnu.so rgbmatrix/core.cpp -I../../include -I/usr/include/python3.13 -Irgbmatrix/shims -L../../lib -lrgbmatrix -lpthread -lrt -lm $(python3-config --includes --ldflags)
 g++ -shared -fPIC -O3 -o rgbmatrix/graphics.cpython-313-aarch64-linux-gnu.so rgbmatrix/graphics.cpp -I../../include -I/usr/include/python3.13 -Irgbmatrix/shims -L../../lib -lrgbmatrix -lpthread -lrt -lm $(python3-config --includes --ldflags)
-sudo mkdir -p /usr/local/lib/python3.13/dist-packages/rgbmatrix
-sudo cp rgbmatrix/*.so /usr/local/lib/python3.13/dist-packages/rgbmatrix/
-sudo cp rgbmatrix/__init__.py /usr/local/lib/python3.13/dist-packages/rgbmatrix/
+PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+sudo mkdir -p /usr/local/lib/python${PYVER}/dist-packages/rgbmatrix
+g++ -shared -fPIC -O3 -o rgbmatrix/core.cpython-${PYVER//.}-aarch64-linux-gnu.so rgbmatrix/core.cpp -I../../include -I/usr/include/python${PYVER} -Irgbmatrix/shims -L../../lib -lrgbmatrix -lpthread -lrt -lm $(python3-config --includes --ldflags)
+g++ -shared -fPIC -O3 -o rgbmatrix/graphics.cpython-${PYVER//.}-aarch64-linux-gnu.so rgbmatrix/graphics.cpp -I../../include -I/usr/include/python${PYVER} -Irgbmatrix/shims -L../../lib -lrgbmatrix -lpthread -lrt -lm $(python3-config --includes --ldflags)
+sudo cp rgbmatrix/*.so /usr/local/lib/python${PYVER}/dist-packages/rgbmatrix/
+sudo cp rgbmatrix/__init__.py /usr/local/lib/python${PYVER}/dist-packages/rgbmatrix/
 
 # Copy fonts
 sudo mkdir -p /usr/local/share/midis-fonts
