@@ -3,7 +3,7 @@ import json
 import time
 from PIL import Image
 from rgbmatrix import graphics
-from secrets import LAT, LON, TIMEZONE
+from midis_config import LAT, LON, TIMEZONE
 
 ICON_DIR = "/usr/local/share/midis-icons"
 

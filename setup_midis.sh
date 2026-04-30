@@ -319,6 +319,6 @@ curl -fsSL https://tailscale.com/install.sh | sh
 echo ""
 echo "=== Setup Complete! ==="
 echo "Next steps:"
-echo "1. Create ~/secrets.py with customer location data"
+echo "1. Create ~/midis_config.py with customer location data"
 echo "2. Run: sudo tailscale up"
 echo "3. Reboot: sudo reboot"

@@ -2,7 +2,7 @@ import time
 import urllib.request
 import json
 from rgbmatrix import graphics
-from secrets import LAT, LON, TIMEZONE
+from midis_config import LAT, LON, TIMEZONE
 
 forecast_data = None
 last_fetch = 0

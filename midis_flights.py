@@ -2,7 +2,7 @@ import time
 import math
 import threading
 from rgbmatrix import graphics
-from secrets import HOME_LAT, HOME_LON, HOME_AIRPORT
+from midis_config import HOME_LAT, HOME_LON, HOME_AIRPORT
 
 try:
     from FlightRadar24 import FlightRadar24API
