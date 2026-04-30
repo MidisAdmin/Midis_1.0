@@ -50,10 +50,8 @@ def setup():
     password = request.form.get('password')
     location = request.form.get('location')
 
-    # Get coordinates from location
     lat, lon, timezone, airport = get_location_data(location)
 
-    # Write midis_config.py
     config = f"""# Midis Configuration
 LAT = {lat}
 LON = {lon}
@@ -65,11 +63,10 @@ HOME_LON = {lon}
     with open('/home/pi/midis_config.py', 'w') as f:
         f.write(config)
 
-    # Connect to WiFi
-    subprocess.Popen(['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password])
+    subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password])
+    time.sleep(5)
 
-    # Schedule reboot
-    subprocess.Popen(['sudo', 'shutdown', '-r', '+1'])
+    subprocess.Popen(['sudo', 'shutdown', '-r', 'now'])
 
     return render_template_string(HTML, success=True)
 
