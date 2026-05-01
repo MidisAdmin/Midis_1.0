@@ -130,9 +130,17 @@ def draw(canvas, font, small_font):
         current_flight = (current_flight + 1) % len(flight_list)
         last_switch = time.time()
 
-    if not flight_list:
-        graphics.DrawText(canvas, small_font, 2, 10, graphics.Color(255, 160, 0), "No flights")
-        graphics.DrawText(canvas, small_font, 2, 20, graphics.Color(180, 180, 180), f"near {HOME_AIRPORT}")
+if not flight_list:
+        try:
+            from PIL import Image
+            img = Image.open("/usr/local/share/midis-icons/flightless.png").convert('RGB')
+            x_offset = (64 - 32) // 2
+            for y in range(32):
+                for x in range(32):
+                    r, g, b = img.getpixel((x, y))
+                    canvas.SetPixel(x_offset + x, y, r, g, b)
+        except:
+            graphics.DrawText(canvas, small_font, 2, 16, graphics.Color(255, 160, 0), "No flights")
         return
 
     f = flight_list[current_flight % len(flight_list)]
