@@ -1,17 +1,19 @@
 import time
 import math
 import threading
+import urllib.request
+import json
 from rgbmatrix import graphics
-from midis_config import HOME_LAT, HOME_LON, HOME_AIRPORT
 
 try:
-    from FlightRadar24 import FlightRadar24API
-    fr_api = FlightRadar24API()
-except Exception as e:
-    print(f"FlightRadar24 error: {e}")
-    fr_api = None
+    from midis_config import HOME_LAT, HOME_LON, HOME_AIRPORT, FR24_API_KEY
+except ImportError:
+    HOME_LAT = 32.7336
+    HOME_LON = -117.1897
+    HOME_AIRPORT = "SAN"
+    FR24_API_KEY = ""
 
-SEARCH_RADIUS = 2.0
+SEARCH_RADIUS = 0.5
 
 flight_list = []
 current_flight = 0
@@ -43,62 +45,58 @@ def calculate_distance_km(lat1, lon1, lat2, lon2):
     a = (math.sin(d_lat/2)**2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(d_lon/2)**2)
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
-def lookup_flight(flight, results):
-    try:
-        details = fr_api.get_flight_details(flight)
-        flight.set_flight_details(details)
-        dest = flight.destination_airport_iata or ""
-        if dest != HOME_AIRPORT:
-            return
-        callsign = (flight.callsign or "").strip()
-        if not callsign:
-            return
-        airline = ''.join(c for c in callsign if c.isalpha())
-        number = ''.join(c for c in callsign if c.isdigit())
-        if len(airline) != 3 or not number:
-            return
-        if airline not in COMMERCIAL_AIRLINES:
-            return
-        origin = flight.origin_airport_iata or "???"
-        if origin.startswith("K") and len(origin) == 4:
-            origin = origin[1:]
-        dist = calculate_distance_km(HOME_LAT, HOME_LON, flight.latitude, flight.longitude)
-        results.append({
-            "callsign": callsign,
-            "origin": origin,
-            "altitude": flight.altitude,
-            "speed": flight.ground_speed or 0,
-            "distance_mi": round(dist * 0.621371, 1)
-        })
-    except:
-        pass
-
 def fetch_flights_thread():
-    global flight_list, last_fetch, fr_api, is_fetching
+    global flight_list, last_fetch, is_fetching
     is_fetching = True
     try:
-        bounds = "{},{},{},{}".format(
-            HOME_LAT + SEARCH_RADIUS,
-            HOME_LAT - SEARCH_RADIUS,
-            HOME_LON - SEARCH_RADIUS,
-            HOME_LON + SEARCH_RADIUS
-        )
-        flights = fr_api.get_flights(bounds=bounds)
-        airborne = [f for f in flights if f.altitude > 0 and f.latitude != 0]
+        lat_min = HOME_LAT - SEARCH_RADIUS
+        lat_max = HOME_LAT + SEARCH_RADIUS
+        lon_min = HOME_LON - SEARCH_RADIUS
+        lon_max = HOME_LON + SEARCH_RADIUS
 
-        results = []
-        threads = []
-        for flight in airborne:
-            t = threading.Thread(target=lookup_flight, args=(flight, results), daemon=True)
-            threads.append(t)
-            t.start()
+        url = f"https://fr24api.flightradar24.com/api/live/flight-positions/full?bounds={lat_max},{lat_min},{lon_min},{lon_max}"
+        req = urllib.request.Request(url, headers={
+            "Accept": "application/json",
+            "Accept-Version": "v1",
+            "Authorization": f"Bearer {FR24_API_KEY}"
+        })
 
-        for t in threads:
-            t.join(timeout=10)
-
-        flight_list = sorted(results, key=lambda f: f["distance_mi"])
-        last_fetch = time.time()
-        print(f"Found {len(flight_list)} {HOME_AIRPORT} arrivals")
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read())
+            found = []
+            for flight in data.get("data", []):
+                dest = flight.get("dest_iata", "") or ""
+                if dest != HOME_AIRPORT:
+                    continue
+                callsign = (flight.get("callsign", "") or "").strip()
+                if not callsign:
+                    continue
+                airline = ''.join(c for c in callsign if c.isalpha())
+                number = ''.join(c for c in callsign if c.isdigit())
+                if len(airline) != 3 or not number:
+                    continue
+                if airline not in COMMERCIAL_AIRLINES:
+                    continue
+                origin = flight.get("orig_iata", "") or "???"
+                if origin.startswith("K") and len(origin) == 4:
+                    origin = origin[1:]
+                altitude = flight.get("alt", 0) or 0
+                speed = flight.get("gspeed", 0) or 0
+                lat = flight.get("lat", HOME_LAT)
+                lon = flight.get("lon", HOME_LON)
+                dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
+                if altitude < 1000:
+                    continue
+                found.append({
+                    "callsign": callsign,
+                    "origin": origin,
+                    "altitude": altitude,
+                    "speed": speed,
+                    "distance_mi": round(dist * 0.621371, 1)
+                })
+            flight_list = sorted(found, key=lambda f: f["distance_mi"])
+            last_fetch = time.time()
+            print(f"Found {len(flight_list)} {HOME_AIRPORT} arrivals")
     except Exception as e:
         print(f"Flight error: {e}")
     is_fetching = False
@@ -130,7 +128,7 @@ def draw(canvas, font, small_font):
         current_flight = (current_flight + 1) % len(flight_list)
         last_switch = time.time()
 
-if not flight_list:
+    if not flight_list:
         try:
             from PIL import Image
             img = Image.open("/usr/local/share/midis-icons/flightless.png").convert('RGB')
