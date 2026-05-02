@@ -8,7 +8,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y git python3-pip python3-pil cython3 python3-setuptools python3-dev libpython3-dev
 
 # Install Python packages
-sudo pip3 install FlightRadarAPI beautifulsoup4 MLB-StatsAPI pytz --break-system-packages
+sudo pip3 install FlightRadarAPI beautifulsoup4 MLB-StatsAPI pytz requests --break-system-packages
 
 # Clone RGB matrix library
 cd ~ && git clone https://github.com/hzeller/rpi-rgb-led-matrix.git
