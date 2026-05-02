@@ -1,8 +1,7 @@
 import time
 import math
 import threading
-import urllib.request
-import json
+import requests
 from rgbmatrix import graphics
 
 try:
@@ -49,54 +48,48 @@ def fetch_flights_thread():
     global flight_list, last_fetch, is_fetching
     is_fetching = True
     try:
-        lat_min = HOME_LAT - SEARCH_RADIUS
-        lat_max = HOME_LAT + SEARCH_RADIUS
-        lon_min = HOME_LON - SEARCH_RADIUS
-        lon_max = HOME_LON + SEARCH_RADIUS
-
-        url = f"https://fr24api.flightradar24.com/api/live/flight-positions/full?bounds={lat_max},{lat_min},{lon_min},{lon_max}"
-        req = urllib.request.Request(url, headers={
+        url = f"https://fr24api.flightradar24.com/api/live/flight-positions/full?bounds={HOME_LAT + SEARCH_RADIUS},{HOME_LAT - SEARCH_RADIUS},{HOME_LON - SEARCH_RADIUS},{HOME_LON + SEARCH_RADIUS}"
+        headers = {
             "Accept": "application/json",
             "Accept-Version": "v1",
-            "Authorization": f"Bearer {FR24_API_KEY}"
-        })
-
-        with urllib.request.urlopen(req, timeout=10) as response:
-            data = json.loads(response.read())
-            found = []
-            for flight in data.get("data", []):
-                dest = flight.get("dest_iata", "") or ""
-                if dest != HOME_AIRPORT:
-                    continue
-                callsign = (flight.get("callsign", "") or "").strip()
-                if not callsign:
-                    continue
-                airline = ''.join(c for c in callsign if c.isalpha())
-                number = ''.join(c for c in callsign if c.isdigit())
-                if len(airline) != 3 or not number:
-                    continue
-                if airline not in COMMERCIAL_AIRLINES:
-                    continue
-                origin = flight.get("orig_iata", "") or "???"
-                if origin.startswith("K") and len(origin) == 4:
-                    origin = origin[1:]
-                altitude = flight.get("alt", 0) or 0
-                speed = flight.get("gspeed", 0) or 0
-                lat = flight.get("lat", HOME_LAT)
-                lon = flight.get("lon", HOME_LON)
-                dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
-                if altitude < 1000:
-                    continue
-                found.append({
-                    "callsign": callsign,
-                    "origin": origin,
-                    "altitude": altitude,
-                    "speed": speed,
-                    "distance_mi": round(dist * 0.621371, 1)
-                })
-            flight_list = sorted(found, key=lambda f: f["distance_mi"])
-            last_fetch = time.time()
-            print(f"Found {len(flight_list)} {HOME_AIRPORT} arrivals")
+            "Authorization": "Bearer " + FR24_API_KEY
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        data = response.json()
+        found = []
+        for flight in data.get("data", []):
+            dest = flight.get("dest_iata", "") or ""
+            if dest != HOME_AIRPORT:
+                continue
+            callsign = (flight.get("callsign", "") or "").strip()
+            if not callsign:
+                continue
+            airline = ''.join(c for c in callsign if c.isalpha())
+            number = ''.join(c for c in callsign if c.isdigit())
+            if len(airline) != 3 or not number:
+                continue
+            if airline not in COMMERCIAL_AIRLINES:
+                continue
+            origin = flight.get("orig_iata", "") or "???"
+            if origin.startswith("K") and len(origin) == 4:
+                origin = origin[1:]
+            altitude = flight.get("alt", 0) or 0
+            speed = flight.get("gspeed", 0) or 0
+            lat = flight.get("lat", HOME_LAT)
+            lon = flight.get("lon", HOME_LON)
+            dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
+            if altitude < 1000:
+                continue
+            found.append({
+                "callsign": callsign,
+                "origin": origin,
+                "altitude": altitude,
+                "speed": speed,
+                "distance_mi": round(dist * 0.621371, 1)
+            })
+        flight_list = sorted(found, key=lambda f: f["distance_mi"])
+        last_fetch = time.time()
+        print(f"Found {len(flight_list)} {HOME_AIRPORT} arrivals")
     except Exception as e:
         print(f"Flight error: {e}")
     is_fetching = False
