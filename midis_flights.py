@@ -112,7 +112,9 @@ def fetch_flights_thread():
                 # Get origin from cache, or call FR24 once
                 if callsign not in origin_cache:
                     print(f"Looking up origin for {callsign} via FR24")
-                    origin_cache[callsign] = get_origin_fr24(callsign)
+                    result = get_origin_fr24(callsign)
+                    if result != "???":
+                        origin_cache[callsign] = result
 
                 origin = origin_cache[callsign]
                 dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
