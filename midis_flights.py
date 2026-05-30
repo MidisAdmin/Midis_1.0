@@ -1,3 +1,4 @@
+cat > ~/midis_flights.py << 'ENDOFFILE'
 import time
 import math
 import threading
@@ -14,7 +15,7 @@ except ImportError:
     HOME_AIRPORT = "SAN"
     FR24_API_KEY = ""
 
-SEARCH_RADIUS = 0.75
+SEARCH_RADIUS = 0.3
 
 flight_list = []
 current_flight = 0
@@ -48,24 +49,20 @@ def calculate_distance_km(lat1, lon1, lat2, lon2):
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
 def get_origin_fr24(callsign):
-    """Call FR24 once per unique callsign to get origin airport. Costs credits but cached forever."""
     if not FR24_API_KEY:
         return "???"
     try:
-        url = f"https://fr24api.flightradar24.com/api/live/flight-positions/full?flights={callsign}"
+        url = "https://fr24api.flightradar24.com/api/live/flight-positions/full?callsigns=" + callsign
         headers = {
             "Accept": "application/json",
             "Accept-Version": "v1",
             "Authorization": "Bearer " + FR24_API_KEY
         }
         r = requests.get(url, headers=headers, timeout=10)
-        if r.status_code == 402:
+        if r.status_code in [402, 429]:
             return "???"
         data = r.json()
         for f in data.get("data", []):
-            dest = f.get("dest_iata", "") or ""
-            if dest != HOME_AIRPORT:
-                continue
             origin = f.get("orig_iata", "") or "???"
             if origin.startswith("K") and len(origin) == 4:
                 origin = origin[1:]
@@ -83,8 +80,7 @@ def fetch_flights_thread():
         lon_min = HOME_LON - SEARCH_RADIUS
         lon_max = HOME_LON + SEARCH_RADIUS
 
-        # OpenSky for free flight positions
-        url = f"https://opensky-network.org/api/states/all?lamin={lat_min}&lomin={lon_min}&lamax={lat_max}&lomax={lon_max}"
+        url = "https://opensky-network.org/api/states/all?lamin=" + str(lat_min) + "&lomin=" + str(lon_min) + "&lamax=" + str(lat_max) + "&lomax=" + str(lon_max)
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=10) as response:
             data = json.loads(response.read())
@@ -109,12 +105,11 @@ def fetch_flights_thread():
                 if airline not in COMMERCIAL_AIRLINES:
                     continue
 
-                # Get origin from cache, or call FR24 once
                 if callsign not in origin_cache:
-                    print(f"Looking up origin for {callsign} via FR24")
+                    print("Looking up origin for " + callsign + " via FR24")
                     result = get_origin_fr24(callsign)
-                    if result != "???":
-                        origin_cache[callsign] = result
+                    origin_cache[callsign] = result
+                    time.sleep(0.5)
 
                 origin = origin_cache[callsign]
                 dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
@@ -129,9 +124,9 @@ def fetch_flights_thread():
 
         flight_list = sorted(found, key=lambda f: f["distance_mi"])
         last_fetch = time.time()
-        print(f"Found {len(flight_list)} flights near {HOME_AIRPORT}")
+        print("Found " + str(len(flight_list)) + " flights near " + HOME_AIRPORT)
     except Exception as e:
-        print(f"Flight error: {e}")
+        print("Flight error: " + str(e))
     is_fetching = False
 
 def get_flights():
@@ -140,8 +135,8 @@ def get_flights():
 
 def format_altitude(alt):
     if alt >= 10000:
-        return f"{round(alt/1000)}kft"
-    return f"{alt}ft"
+        return str(round(alt/1000)) + "kft"
+    return str(alt) + "ft"
 
 def draw(canvas, font, small_font):
     global flight_list, current_flight, last_fetch, last_switch, route_font, is_fetching
@@ -182,11 +177,12 @@ def draw(canvas, font, small_font):
         x += 7
 
     x = 2
-    for char in f"{f['origin']}>{HOME_AIRPORT}":
+    for char in f["origin"] + ">" + HOME_AIRPORT:
         graphics.DrawText(canvas, route_font, x, 22, graphics.Color(255, 160, 0), char)
         x += 7
 
     alt_str = format_altitude(f["altitude"])
-    spd_str = f"{f['speed']}kt"
-    stats = f"{alt_str} {spd_str}"
+    spd_str = str(f["speed"]) + "kt"
+    stats = alt_str + " " + spd_str
     graphics.DrawText(canvas, small_font, 2, 31, graphics.Color(0, 200, 0), stats)
+ENDOFFILE
