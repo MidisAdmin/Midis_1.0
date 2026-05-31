@@ -178,7 +178,7 @@ def is_game_relevant(game):
 def fetch_games():
     global game_data, last_fetch
     games = []
-    for team_id in [PADRES_ID, DODGERS_ID]:
+    for team_id in [PADRES_ID]:
         g = get_game(team_id)
         if g and is_game_relevant(g):
             games.append(g)
