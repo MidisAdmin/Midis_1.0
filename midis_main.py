@@ -10,7 +10,7 @@ import midis_weather
 import midis_stocks
 import midis_art
 
-subprocess.run(["sudo", "python3", "/home/pi/midis_splash.py"])
+subprocess.run(["sudo", "python3", "/home/pi/Midis_1.0/midis_splash.py"])
 
 options = RGBMatrixOptions()
 options.rows = 32
