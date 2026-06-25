@@ -20,6 +20,15 @@ options.gpio_slowdown = 4
 options.disable_hardware_pulsing = True
 
 matrix = RGBMatrix(options=options)
+
+# Test cache write after matrix init
+try:
+    with open('/home/pi/flight_origin_cache.json', 'w') as f:
+        f.write('{}')
+    print("Write after matrix init: SUCCESS")
+except Exception as e:
+    print("Write after matrix init: FAILED", e)
+
 canvas = matrix.CreateFrameCanvas()
 font = graphics.Font()
 font.LoadFont("/usr/local/share/midis-fonts/10x20.bdf")
