@@ -26,6 +26,7 @@ last_switch = 0
 FLIGHT_DURATION = 45
 is_fetching = False
 origin_cache = {}
+cache_lock = threading.Lock()
 route_font = None
 
 COMMERCIAL_AIRLINES = {
@@ -65,13 +66,15 @@ def load_cache():
 
 def save_cache():
     try:
-        with open(CACHE_FILE, "w") as f:
-            json.dump(origin_cache, f)
+        with cache_lock:
+            with open(CACHE_FILE, "w") as f:
+                json.dump(origin_cache, f)
     except Exception as e:
         print(f"Cache save error: {e}")
 
 def get_cached_origin(callsign):
-    entry = origin_cache.get(callsign)
+    with cache_lock:
+        entry = origin_cache.get(callsign)
     if not entry:
         return None
     try:
@@ -84,10 +87,11 @@ def get_cached_origin(callsign):
     return None
 
 def set_cached_origin(callsign, origin):
-    origin_cache[callsign] = {
-        "origin": origin,
-        "cached_on": datetime.now(timezone.utc).isoformat()
-    }
+    with cache_lock:
+        origin_cache[callsign] = {
+            "origin": origin,
+            "cached_on": datetime.now(timezone.utc).isoformat()
+        }
     save_cache()
 
 # --- Flight fetch functions ---
