@@ -25,5 +25,5 @@ def draw(canvas, font, small_font):
     ampm_str = time.strftime("%p").lower()
     text_width = len(time_str) * 9
     x = (64 - text_width) // 2
-    graphics.DrawText(canvas, bold_font, x, 20, graphics.Color(255, 160, 0), time_str)
-    graphics.DrawText(canvas, small_font, 50, 26, graphics.Color(255, 160, 0), ampm_str)
+    graphics.DrawText(canvas, bold_font, x, 20, graphics.Color(0, 180, 255), time_str)
+    graphics.DrawText(canvas, small_font, 50, 26, graphics.Color(0, 180, 255), ampm_str)
