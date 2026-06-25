@@ -67,11 +67,8 @@ def load_cache():
 
 def save_cache():
     try:
-        data = json.dumps(origin_cache)
-        subprocess.run(
-            ['sudo', 'bash', '-c', f'echo \'{data}\' > {CACHE_FILE}'],
-            check=True
-        )
+        with open(CACHE_FILE, "w") as f:
+            json.dump(origin_cache, f)
     except Exception as e:
         print(f"Cache save error: {e}")
 
