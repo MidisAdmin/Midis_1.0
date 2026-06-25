@@ -66,9 +66,8 @@ def load_cache():
 
 def save_cache():
     try:
-        with cache_lock:
-            with open(CACHE_FILE, "w") as f:
-                json.dump(origin_cache, f)
+        with open(CACHE_FILE, "w") as f:
+            json.dump(origin_cache, f)
     except Exception as e:
         print(f"Cache save error: {e}")
 
