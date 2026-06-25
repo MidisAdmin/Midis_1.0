@@ -69,7 +69,9 @@ def save_cache():
         with open(CACHE_FILE, "w") as f:
             json.dump(origin_cache, f)
     except Exception as e:
+        import traceback
         print(f"Cache save error: {e}")
+        traceback.print_exc()
 
 def get_cached_origin(callsign):
     with cache_lock:
