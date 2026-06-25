@@ -4,6 +4,7 @@ import threading
 import urllib.request
 import json
 import requests
+from datetime import datetime, timezone
 from rgbmatrix import graphics
 
 try:
@@ -15,6 +16,9 @@ except ImportError:
     FR24_API_KEY = ""
 
 SEARCH_RADIUS = 0.3
+CACHE_FILE = "/home/pi/flight_origin_cache.json"
+CACHE_MAX_AGE_DAYS = 14
+
 flight_list = []
 current_flight = 0
 last_fetch = 0
@@ -35,6 +39,58 @@ def init_fonts():
     global route_font
     route_font = graphics.Font()
     route_font.LoadFont("/usr/local/share/midis-fonts/6x13B.bdf")
+
+# --- Cache file functions ---
+
+def load_cache():
+    global origin_cache
+    try:
+        with open(CACHE_FILE, "r") as f:
+            raw = json.load(f)
+        now = datetime.now(timezone.utc)
+        cleaned = {}
+        for callsign, entry in raw.items():
+            cached_on = datetime.fromisoformat(entry["cached_on"])
+            age_days = (now - cached_on).days
+            if age_days < CACHE_MAX_AGE_DAYS:
+                cleaned[callsign] = entry
+        origin_cache = cleaned
+        print(f"Loaded {len(origin_cache)} entries from flight cache")
+    except FileNotFoundError:
+        origin_cache = {}
+        print("No flight cache file found, starting fresh")
+    except Exception as e:
+        origin_cache = {}
+        print(f"Cache load error: {e}")
+
+def save_cache():
+    try:
+        with open(CACHE_FILE, "w") as f:
+            json.dump(origin_cache, f)
+    except Exception as e:
+        print(f"Cache save error: {e}")
+
+def get_cached_origin(callsign):
+    entry = origin_cache.get(callsign)
+    if not entry:
+        return None
+    try:
+        cached_on = datetime.fromisoformat(entry["cached_on"])
+        age_days = (datetime.now(timezone.utc) - cached_on).days
+        if age_days < CACHE_MAX_AGE_DAYS:
+            return entry["origin"]
+    except:
+        pass
+    return None
+
+def set_cached_origin(callsign, origin):
+    origin_cache[callsign] = {
+        "origin": origin,
+        "cached_on": datetime.now(timezone.utc).isoformat()
+    }
+    save_cache()
+
+# --- Flight fetch functions ---
 
 def calculate_distance_km(lat1, lon1, lat2, lon2):
     R = 6371
@@ -69,7 +125,8 @@ def get_origin_fr24(callsign):
     return "???"
 
 def fetch_flights_thread():
-    global flight_list, last_fetch, is_fetching, origin_cache
+    global flight_list, last_fetch, is_fetching
+
     is_fetching = True
     try:
         lat_min = HOME_LAT - SEARCH_RADIUS
@@ -80,6 +137,7 @@ def fetch_flights_thread():
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=10) as response:
             data = json.loads(response.read())
+
         found = []
         if data.get("states"):
             for s in data["states"]:
@@ -89,6 +147,7 @@ def fetch_flights_thread():
                 on_ground = s[8]
                 lat = s[6] or HOME_LAT
                 lon = s[5] or HOME_LON
+
                 if not callsign or on_ground or altitude < 1000:
                     continue
                 airline = "".join(c for c in callsign if c.isalpha())
@@ -97,15 +156,21 @@ def fetch_flights_thread():
                     continue
                 if airline not in COMMERCIAL_AIRLINES:
                     continue
-                if callsign not in origin_cache:
-                    print("Looking up origin for " + callsign + " via FR24")
-                    result = get_origin_fr24(callsign)
-                    origin_cache[callsign] = result
+
+                # Check cache first, only call FR24 if not cached
+                origin = get_cached_origin(callsign)
+                if origin is None:
+                    print(f"Cache miss — looking up {callsign} via FR24")
+                    origin = get_origin_fr24(callsign)
+                    set_cached_origin(callsign, origin)
                     time.sleep(0.5)
-                origin = origin_cache[callsign]
+                else:
+                    print(f"Cache hit — {callsign}: {origin}")
+
                 dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
                 if origin == HOME_AIRPORT:
                     continue
+
                 found.append({
                     "callsign": callsign,
                     "origin": origin,
@@ -113,11 +178,14 @@ def fetch_flights_thread():
                     "speed": speed,
                     "distance_mi": round(dist * 0.621371, 1)
                 })
+
         flight_list = sorted(found, key=lambda f: f["distance_mi"])
         last_fetch = time.time()
-        print("Found " + str(len(flight_list)) + " flights near " + HOME_AIRPORT)
+        print(f"Found {len(flight_list)} flights near {HOME_AIRPORT}")
+
     except Exception as e:
-        print("Flight error: " + str(e))
+        print(f"Flight error: {e}")
+
     is_fetching = False
 
 def get_flights():
@@ -129,19 +197,27 @@ def format_altitude(alt):
         return str(round(alt/1000)) + "kft"
     return str(alt) + "ft"
 
+# Load cache on startup
+load_cache()
+
 def draw(canvas, font, small_font):
     global flight_list, current_flight, last_fetch, last_switch, route_font, is_fetching
+
     if route_font is None:
         init_fonts()
+
     if not is_fetching and time.time() - last_fetch > 180:
         get_flights()
+
     if is_fetching and not flight_list:
         graphics.DrawText(canvas, small_font, 2, 12, graphics.Color(255, 160, 0), "Fetching")
         graphics.DrawText(canvas, small_font, 2, 22, graphics.Color(180, 180, 180), "flights...")
         return
+
     if flight_list and time.time() - last_switch > FLIGHT_DURATION:
         current_flight = (current_flight + 1) % len(flight_list)
         last_switch = time.time()
+
     if not flight_list:
         try:
             from PIL import Image
@@ -154,15 +230,19 @@ def draw(canvas, font, small_font):
         except:
             graphics.DrawText(canvas, small_font, 2, 16, graphics.Color(255, 160, 0), "No flights")
         return
+
     f = flight_list[current_flight % len(flight_list)]
+
     x = 2
     for char in f["callsign"]:
         graphics.DrawText(canvas, route_font, x, 10, graphics.Color(148, 0, 211), char)
         x += 7
+
     x = 2
     for char in f["origin"] + ">" + HOME_AIRPORT:
         graphics.DrawText(canvas, route_font, x, 22, graphics.Color(255, 160, 0), char)
         x += 7
+
     alt_str = format_altitude(f["altitude"])
     spd_str = str(f["speed"]) + "kt"
     stats = alt_str + " " + spd_str
