@@ -1,3 +1,4 @@
+import subprocess
 import time
 import math
 import threading
@@ -66,12 +67,13 @@ def load_cache():
 
 def save_cache():
     try:
-        with open(CACHE_FILE, "w") as f:
-            json.dump(origin_cache, f)
+        data = json.dumps(origin_cache)
+        subprocess.run(
+            ['sudo', 'bash', '-c', f'echo \'{data}\' > {CACHE_FILE}'],
+            check=True
+        )
     except Exception as e:
-        import traceback
         print(f"Cache save error: {e}")
-        traceback.print_exc()
 
 def get_cached_origin(callsign):
     with cache_lock:
