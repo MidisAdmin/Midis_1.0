@@ -2,9 +2,7 @@ import time
 import statsapi
 from datetime import datetime, timezone
 from rgbmatrix import graphics
-
-PADRES_ID = 135
-DODGERS_ID = 119
+from midis_config import BASEBALL_TEAMS
 
 game_data = []
 last_fetch = 0
@@ -178,7 +176,7 @@ def is_game_relevant(game):
 def fetch_games():
     global game_data, last_fetch
     games = []
-    for team_id in [PADRES_ID]:
+    for team_id in BASEBALL_TEAMS:
         g = get_game(team_id)
         if g and is_game_relevant(g):
             games.append(g)
@@ -225,7 +223,7 @@ def draw(canvas, font, small_font):
     graphics.DrawText(canvas, med_font, 2, 23, graphics.Color(*home_color), home)
     graphics.DrawText(canvas, med_font, 44, 23, graphics.Color(*home_color), str(home_score))
 
-# Inning + outs on bottom line
+    # Inning + outs on bottom line
     if inning == "FINAL":
         graphics.DrawText(canvas, small_font, 2, 30, graphics.Color(255, 60, 60), "FINAL")
     else:
