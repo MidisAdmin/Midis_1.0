@@ -104,6 +104,8 @@ def fetch_flights_thread():
                     time.sleep(0.5)
                 origin = origin_cache[callsign]
                 dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
+                if origin == HOME_AIRPORT:
+                    continue
                 found.append({
                     "callsign": callsign,
                     "origin": origin,
