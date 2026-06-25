@@ -4,6 +4,9 @@ echo "=== Midis Setup Script ==="
 # Update
 sudo apt update && sudo apt upgrade -y
 
+# Allow daemon user to access home folder
+sudo chmod 755 /home/pi
+
 # Install dependencies
 sudo apt install -y git python3-pip python3-pil cython3 python3-setuptools python3-dev libpython3-dev
 
@@ -261,7 +264,6 @@ sudo cp ~/rpi-rgb-led-matrix/fonts/*.bdf /usr/local/share/midis-fonts/
 
 # Clone Midis code
 cd ~ && git clone https://github.com/MidisAdmin/Midis_1.0.git
-cp ~/Midis_1.0/*.py ~/
 sudo mkdir -p /usr/local/share/midis-icons
 sudo cp ~/Midis_1.0/icons/midis-icons/*.png /usr/local/share/midis-icons/
 
@@ -290,7 +292,6 @@ cat > ~/update_midis.sh << 'EOF'
 #!/bin/bash
 cd ~/Midis_1.0
 git pull
-cp *.py ~/
 sudo systemctl restart midis
 EOF
 chmod +x ~/update_midis.sh
@@ -306,13 +307,15 @@ Description=Midis Display
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/pi/midis_main.py
+ExecStartPre=/bin/bash -c "touch /home/pi/flight_origin_cache.json && chown daemon:daemon /home/pi/flight_origin_cache.json && chmod 666 /home/pi/flight_origin_cache.json"
+ExecStart=/usr/bin/python3 /home/pi/Midis_1.0/midis_main.py
 Restart=always
 User=root
 
 [Install]
 WantedBy=multi-user.target
 EOF'
+
 sudo systemctl daemon-reload
 sudo systemctl enable midis
 
