@@ -16,7 +16,7 @@ except ImportError:
     FR24_API_KEY = ""
 
 SEARCH_RADIUS = 0.3
-CACHE_FILE = "/home/pi/flight_origin_cache.json"
+CACHE_FILE = "/tmp/flight_origin_cache.json"
 CACHE_MAX_AGE_DAYS = 14
 
 flight_list = []
