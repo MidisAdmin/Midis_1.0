@@ -294,7 +294,6 @@ cd ~/Midis_1.0
 git pull
 sudo systemctl restart midis
 EOF
-chmod +x ~/update_midis.sh
 
 # Crontab
 (crontab -l 2>/dev/null; echo "*/5 * * * * /home/pi/wifi_watchdog.sh") | crontab -
