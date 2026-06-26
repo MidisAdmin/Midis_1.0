@@ -174,6 +174,8 @@ def fetch_flights_thread():
                 dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
                 if origin == HOME_AIRPORT:
                     continue
+                if origin == "TIJ":
+                    continue
 
                 found.append({
                     "callsign": callsign,
