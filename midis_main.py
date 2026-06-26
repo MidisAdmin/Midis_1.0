@@ -27,13 +27,13 @@ small_font = graphics.Font()
 small_font.LoadFont("/usr/local/share/midis-fonts/5x8.bdf")
 
 FEATURES = [
-    (midis_clock, 15),
-    (midis_weather, 20),
-    (midis_flights, 20),
+    (midis_clock, 10),
+    (midis_weather, 10),
+    (midis_flights, 10),
     (midis_stocks, 10),
-    (midis_art, 20),
-    (midis_forecast, 30),
-    (midis_flights, 20),
+    (midis_art, 8),
+    (midis_forecast, 10),
+    (midis_flights, 10),
 ]
 
 current = 0
