@@ -18,7 +18,7 @@ except ImportError:
 
 SEARCH_RADIUS = 0.3
 CACHE_FILE = "/home/pi/flight_origin_cache.json"
-CACHE_MAX_AGE_DAYS = 14
+CACHE_MAX_AGE_DAYS = 21
 
 flight_list = []
 current_flight = 0
