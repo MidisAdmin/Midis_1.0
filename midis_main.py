@@ -1,3 +1,4 @@
+cat > midis_main.py << 'EOF'
 import subprocess
 import time
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
@@ -9,6 +10,7 @@ import midis_baseball
 import midis_weather
 import midis_stocks
 import midis_art
+import midis_worldcup
 
 subprocess.run(["sudo", "python3", "/home/pi/Midis_1.0/midis_splash.py"])
 
@@ -39,17 +41,28 @@ FEATURES = [
 current = 0
 screen_start = time.time()
 
+# Brightness is now checked at most once every 5 minutes,
+# so a slow/failed forecast lookup can't stall the display loop.
+brightness_last_check = 0
+brightness_cached = 100
+
 def get_brightness():
+    global brightness_last_check, brightness_cached
+    if time.time() - brightness_last_check < 300:
+        return brightness_cached
+    brightness_last_check = time.time()
     try:
         sunset_hour, sunrise_hour = midis_forecast.get_sunset_sunrise()
         now_hour = time.localtime().tm_hour
         dim_start = sunset_hour + 1
         dim_end = sunrise_hour - 1
         if now_hour >= dim_start or now_hour < dim_end:
-            return 50
-        return 100
+            brightness_cached = 50
+        else:
+            brightness_cached = 100
     except:
-        return 100
+        brightness_cached = 100
+    return brightness_cached
 
 last_brightness = None
 
@@ -61,6 +74,13 @@ try:
         if brightness != last_brightness:
             matrix.brightness = brightness
             last_brightness = brightness
+
+        if midis_worldcup.game_active():
+            canvas.Clear()
+            midis_worldcup.draw(canvas, font, small_font)
+            canvas = matrix.SwapOnVSync(canvas)
+            time.sleep(0.05)
+            continue
 
         if midis_baseball.games_active():
             canvas.Clear()
@@ -81,3 +101,4 @@ try:
 
 except KeyboardInterrupt:
     matrix.Clear()
+EOF
