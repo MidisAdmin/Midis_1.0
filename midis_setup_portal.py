@@ -1,7 +1,7 @@
 import subprocess
 import os
 import time
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, redirect
 
 app = Flask(__name__)
 
@@ -72,6 +72,14 @@ def setup():
     subprocess.Popen(['sudo', 'shutdown', '-r', 'now'])
 
     return render_template_string(HTML, success=True)
+
+# Captive portal detection endpoints
+@app.route('/hotspot-detect.html')
+@app.route('/generate_204')
+@app.route('/ncsi.txt')
+@app.route('/connecttest.txt')
+def captive_check():
+    return redirect('http://192.168.4.1/')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=False)
