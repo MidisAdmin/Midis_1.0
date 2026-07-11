@@ -11,12 +11,12 @@ HTML = """
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Midis Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: Arial, sans-serif; max-width: 400px; margin: 40px auto; padding: 20px; background: #111; color: #fff; }
-        h1 { color: #FFA500; }
+        h1 { color: #00FF07; font-family: 'Space Grotesk', sans-serif; }
         input { width: 100%; padding: 10px; margin: 8px 0; background: #222; color: #fff; border: 1px solid #444; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #FFA500; color: #000; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .label { color: #aaa; font-size: 14px; margin-top: 10px; }
+        button { width: 100%; padding: 12px; background: #FF79FD; color: #000; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
         .success { color: #00cc00; font-size: 18px; text-align: center; }
     </style>
 </head>
