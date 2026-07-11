@@ -1,5 +1,21 @@
-cat > midis_main.py << 'EOF'
 import subprocess
+import os
+import sys
+
+# Check if WiFi is configured, start setup portal if not
+if not os.path.exists('/home/pi/Midis_1.0/midis_config.py'):
+    subprocess.run(['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_check.py'])
+    sys.exit(0)
+
+try:
+    from midis_config import WIFI_SSID
+    if not WIFI_SSID:
+        subprocess.run(['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_check.py'])
+        sys.exit(0)
+except ImportError:
+    subprocess.run(['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_check.py'])
+    sys.exit(0)
+
 import time
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
 from rgbmatrix import graphics
@@ -41,8 +57,6 @@ FEATURES = [
 current = 0
 screen_start = time.time()
 
-# Brightness is now checked at most once every 5 minutes,
-# so a slow/failed forecast lookup can't stall the display loop.
 brightness_last_check = 0
 brightness_cached = 100
 
@@ -101,4 +115,3 @@ try:
 
 except KeyboardInterrupt:
     matrix.Clear()
-EOF

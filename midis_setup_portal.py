@@ -30,8 +30,6 @@ HTML = """
         <input type="text" name="ssid" placeholder="Your WiFi name" required>
         <p class="label">WiFi Password</p>
         <input type="password" name="password" placeholder="Your WiFi password" required>
-        <p class="label">Your City or ZIP Code</p>
-        <input type="text" name="location" placeholder="e.g. San Diego, CA or 92115" required>
         <br><br>
         <button type="submit">Connect Midis</button>
     </form>
@@ -48,44 +46,32 @@ def index():
 def setup():
     ssid = request.form.get('ssid')
     password = request.form.get('password')
-    location = request.form.get('location')
 
-    lat, lon, timezone, airport = get_location_data(location)
+    # Read existing config
+    config_path = '/home/pi/Midis_1.0/midis_config.py'
+    with open(config_path, 'r') as f:
+        content = f.read()
 
-    config = f"""# Midis Configuration
-LAT = {lat}
-LON = {lon}
-TIMEZONE = "{timezone}"
-HOME_AIRPORT = "{airport}"
-HOME_LAT = {lat}
-HOME_LON = {lon}
-"""
-    with open('/home/pi/midis_config.py', 'w') as f:
-        f.write(config)
+    # Update WiFi fields
+    import re
+    content = re.sub(r'WIFI_SSID = ".*"', f'WIFI_SSID = "{ssid}"', content)
+    content = re.sub(r'WIFI_PASSWORD = ".*"', f'WIFI_PASSWORD = "{password}"', content)
 
+    with open(config_path, 'w') as f:
+        f.write(content)
+
+    # Connect to WiFi
     subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password])
     time.sleep(5)
 
+    # Stop hotspot
+    subprocess.run(['sudo', 'systemctl', 'stop', 'hostapd'])
+    subprocess.run(['sudo', 'systemctl', 'stop', 'dnsmasq'])
+
+    # Reboot
     subprocess.Popen(['sudo', 'shutdown', '-r', 'now'])
 
     return render_template_string(HTML, success=True)
-
-def get_location_data(location):
-    try:
-        import urllib.request
-        import json
-        query = location.replace(' ', '+')
-        url = f"https://nominatim.openstreetmap.org/search?q={query}&format=json&limit=1"
-        req = urllib.request.Request(url, headers={"User-Agent": "MidisSetup/1.0"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            data = json.loads(r.read())
-            if data:
-                lat = round(float(data[0]['lat']), 6)
-                lon = round(float(data[0]['lon']), 6)
-                return lat, lon, "America/Los_Angeles", "SAN"
-    except:
-        pass
-    return 32.787253, -117.215941, "America/Los_Angeles", "SAN"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=False)
