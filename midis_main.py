@@ -17,15 +17,12 @@ except ImportError:
     sys.exit(0)
 
 import time
+import importlib
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
 from rgbmatrix import graphics
-import midis_clock
-import midis_flights
+from midis_config import MODULES
 import midis_forecast
 import midis_baseball
-import midis_weather
-import midis_stocks
-import midis_art
 
 subprocess.run(["sudo", "python3", "/home/pi/Midis_1.0/midis_splash.py"])
 
@@ -43,15 +40,14 @@ font.LoadFont("/usr/local/share/midis-fonts/10x20.bdf")
 small_font = graphics.Font()
 small_font.LoadFont("/usr/local/share/midis-fonts/5x8.bdf")
 
-FEATURES = [
-    (midis_clock, 10),
-    (midis_weather, 10),
-    (midis_flights, 10),
-    (midis_stocks, 10),
-    (midis_art, 8),
-    (midis_forecast, 10),
-    (midis_flights, 10),
-]
+# Dynamically load modules from config
+FEATURES = []
+for module_name, duration in MODULES:
+    try:
+        mod = importlib.import_module(f"midis_{module_name}")
+        FEATURES.append((mod, duration))
+    except ImportError:
+        print(f"Module midis_{module_name} not found, skipping")
 
 current = 0
 screen_start = time.time()
@@ -93,6 +89,10 @@ try:
             midis_baseball.draw(canvas, font, small_font)
             canvas = matrix.SwapOnVSync(canvas)
             time.sleep(0.05)
+            continue
+
+        if not FEATURES:
+            time.sleep(1)
             continue
 
         feature, duration = FEATURES[current]
