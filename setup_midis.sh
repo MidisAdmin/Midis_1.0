@@ -299,6 +299,24 @@ EOF
 (crontab -l 2>/dev/null; echo "*/5 * * * * /home/pi/wifi_watchdog.sh") | crontab -
 (crontab -l 2>/dev/null; echo "0 3 * * * /home/pi/update_midis.sh") | crontab -
 
+# Midis hotspot IP service
+sudo bash -c 'cat > /etc/systemd/system/midis-hotspot-ip.service << EOF
+[Unit]
+Description=Set Midis hotspot IP
+After=hostapd.service
+Requires=hostapd.service
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/ip addr add 192.168.4.1/24 dev wlan0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+sudo systemctl daemon-reload
+sudo systemctl enable midis-hotspot-ip
+
 # Systemd service
 sudo bash -c 'cat > /etc/systemd/system/midis.service << EOF
 [Unit]

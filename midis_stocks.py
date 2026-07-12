@@ -29,7 +29,8 @@ def get_stock():
             prev_close = closes[-2]
             current = closes[-1]
             change = current - prev_close
-            stock_data = (round(current, 2), round(change, 2))
+            pct_change = (change / prev_close) * 100
+            stock_data = (round(current, 2), round(pct_change, 2))
             last_fetch = time.time()
     except Exception as e:
         print(f"Stock error: {e}")
@@ -63,10 +64,10 @@ def draw(canvas, font, small_font):
 
         # Change right aligned with 2px buffer
         if change >= 0:
-            change_str = f"+{change:.2f}"
+            change_str = f"+{change:.2f}%"
             color = graphics.Color(0, 220, 0)
         else:
-            change_str = f"{change:.2f}"
+            change_str = f"{change:.2f}%"
             color = graphics.Color(255, 40, 40)
 
         change_width = len(change_str) * 6
