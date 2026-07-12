@@ -10,6 +10,40 @@ def is_wifi_configured():
     except ImportError:
         return False
 
+def show_setup_screen():
+    try:
+        from rgbmatrix import RGBMatrix, RGBMatrixOptions
+        from rgbmatrix import graphics
+
+        options = RGBMatrixOptions()
+        options.rows = 32
+        options.cols = 64
+        options.hardware_mapping = 'adafruit-hat'
+        options.gpio_slowdown = 4
+        options.disable_hardware_pulsing = True
+
+        matrix = RGBMatrix(options=options)
+        canvas = matrix.CreateFrameCanvas()
+
+        medium_font = graphics.Font()
+        medium_font.LoadFont("/usr/local/share/midis-fonts/6x10.bdf")
+        small_font = graphics.Font()
+        small_font.LoadFont("/usr/local/share/midis-fonts/5x8.bdf")
+
+        canvas.Clear()
+        green  = graphics.Color(0, 255, 0)
+        orange = graphics.Color(255, 140, 0)
+        pink   = graphics.Color(255, 121, 253)
+
+        graphics.DrawText(canvas, medium_font, 1, 10, green,  "SETUP MODE")
+        graphics.DrawText(canvas, small_font,  1, 20, orange, "Connect to wifi:")
+        graphics.DrawText(canvas, small_font,  1, 29, pink,   "Midis Setup")
+
+        canvas = matrix.SwapOnVSync(canvas)
+        time.sleep(2)
+    except Exception as e:
+        print(f"Display error: {e}")
+
 def start_hotspot():
     # Unblock WiFi
     subprocess.run(['sudo', 'rfkill', 'unblock', 'wifi'])
@@ -56,5 +90,6 @@ EOF
 
 if not is_wifi_configured():
     print("No WiFi configured — starting setup mode")
+    show_setup_screen()
     start_hotspot()
     sys.exit(0)

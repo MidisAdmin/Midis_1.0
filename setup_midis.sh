@@ -267,6 +267,31 @@ cd ~ && git clone https://github.com/MidisAdmin/Midis_1.0.git
 sudo mkdir -p /usr/local/share/midis-icons
 sudo cp ~/Midis_1.0/icons/midis-icons/*.png /usr/local/share/midis-icons/
 
+# Create default midis config
+cat > ~/Midis_1.0/midis_config.py << 'EOF'
+# Midis Configuration
+WIFI_SSID = ""
+WIFI_PASSWORD = ""
+LAT = 0.0
+LON = 0.0
+TIMEZONE = "America/Los_Angeles"
+HOME_AIRPORT = ""
+HOME_LAT = 0.0
+HOME_LON = 0.0
+FR24_API_KEY = ""
+STORMGLASS_API_KEY = ""
+BASEBALL_TEAMS = []
+MODULES = [
+    ("clock", 10),
+    ("weather", 10),
+    ("flights", 10),
+    ("stocks", 10),
+    ("art", 8),
+    ("forecast", 10),
+    ("flights", 10),
+]
+EOF
+
 # WiFi power management fix
 sudo bash -c 'cat > /etc/NetworkManager/conf.d/wifi-powersave-off.conf << EOF
 [connection]
