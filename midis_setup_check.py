@@ -38,7 +38,7 @@ def show_setup_screen():
 
         graphics.DrawText(canvas, medium_font, 1, 10, green,  "SETUP MODE")
         graphics.DrawText(canvas, small_font,  1, 20, orange, "Wifi:")
-        graphics.DrawText(canvas, small_font,  1, 29, pink,   "\"Midis Setup\"")
+        graphics.DrawText(canvas, small_font,  1, 29, pink,   "Midis Setup")
 
         canvas = matrix.SwapOnVSync(canvas)
         return matrix
