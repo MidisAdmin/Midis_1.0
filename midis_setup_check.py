@@ -47,9 +47,9 @@ def show_setup_screen():
         print(f"Display error: {e}")
 
 def start_hotspot():
-    subprocess.run(['sudo', 'rfkill', 'unblock', 'wifi'])
-    subprocess.run(['sudo', 'nmcli', 'device', 'disconnect', 'wlan0'], capture_output=True)
-    subprocess.run(['sudo', 'bash', '-c', '''
+    subprocess.run(['rfkill', 'unblock', 'wifi'])
+    subprocess.run(['nmcli', 'device', 'disconnect', 'wlan0'], capture_output=True)
+    subprocess.run(['bash', '-c', '''
 cat > /etc/hostapd/hostapd.conf << EOF
 interface=wlan0
 driver=nl80211
@@ -61,21 +61,21 @@ auth_algs=1
 ignore_broadcast_ssid=0
 EOF
 '''])
-    subprocess.run(['sudo', 'bash', '-c', '''
+    subprocess.run(['bash', '-c', '''
 cat > /etc/dnsmasq.conf << EOF
 interface=wlan0
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
 address=/#/192.168.4.1
 EOF
 '''])
-    subprocess.run(['sudo', 'ip', 'addr', 'flush', 'dev', 'wlan0'])
-    subprocess.run(['sudo', 'ip', 'addr', 'add', '192.168.4.1/24', 'dev', 'wlan0'])
-    subprocess.run(['sudo', 'ip', 'link', 'set', 'wlan0', 'up'])
-    subprocess.run(['sudo', 'systemctl', 'restart', 'hostapd'])
+    subprocess.run(['ip', 'addr', 'flush', 'dev', 'wlan0'])
+    subprocess.run(['ip', 'addr', 'add', '192.168.4.1/24', 'dev', 'wlan0'])
+    subprocess.run(['ip', 'link', 'set', 'wlan0', 'up'])
+    subprocess.run(['systemctl', 'restart', 'hostapd'])
     time.sleep(2)
-    subprocess.run(['sudo', 'systemctl', 'restart', 'dnsmasq'])
+    subprocess.run(['systemctl', 'restart', 'dnsmasq'])
     time.sleep(1)
-    subprocess.run(['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_portal.py'])
+    subprocess.run(['python3', '/home/pi/Midis_1.0/midis_setup_portal.py'])
 
 if not is_wifi_configured():
     print("No WiFi configured — starting setup mode")
