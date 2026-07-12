@@ -45,6 +45,10 @@ def is_trading_hours():
 def draw(canvas, font, small_font):
     global stock_data, last_fetch, med_font, change_font
 
+    # Skip on weekends
+    if time.gmtime().tm_wday >= 5:
+        return
+
     if med_font is None:
         init_fonts()
 
