@@ -4,7 +4,7 @@ import os
 from PIL import Image
 from rgbmatrix import graphics
 
-ART_DIR = "/home/pi/Midis_1.0/icons/midis-icons/art"
+ART_DIR = "/home/pi/Midis_1.0/icons/midis-icons/Art"
 
 IMAGES = [
     os.path.join(ART_DIR, f)
