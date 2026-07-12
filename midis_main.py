@@ -26,7 +26,6 @@ import midis_baseball
 import midis_weather
 import midis_stocks
 import midis_art
-import midis_worldcup
 
 subprocess.run(["sudo", "python3", "/home/pi/Midis_1.0/midis_splash.py"])
 
@@ -88,13 +87,6 @@ try:
         if brightness != last_brightness:
             matrix.brightness = brightness
             last_brightness = brightness
-
-        if midis_worldcup.game_active():
-            canvas.Clear()
-            midis_worldcup.draw(canvas, font, small_font)
-            canvas = matrix.SwapOnVSync(canvas)
-            time.sleep(0.05)
-            continue
 
         if midis_baseball.games_active():
             canvas.Clear()
