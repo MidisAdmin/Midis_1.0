@@ -11,7 +11,6 @@ HTML = """
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Midis Setup</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: Arial, sans-serif; max-width: 400px; margin: 40px auto; padding: 20px; background: #111; color: #fff; }
         h1 { color: #00FF07; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
