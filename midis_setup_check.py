@@ -36,10 +36,12 @@ def show_setup_screen():
         pink   = graphics.Color(255, 121, 253)
 
         graphics.DrawText(canvas, medium_font, 1, 10, green,  "SETUP MODE")
-        graphics.DrawText(canvas, small_font,  1, 20, orange, "Connect to wifi:")
-        graphics.DrawText(canvas, small_font,  1, 29, pink,   "Midis Setup")
+        graphics.DrawText(canvas, small_font,  1, 20, orange, "WIFI:")
+        graphics.DrawText(canvas, small_font,  1, 29, pink,   "'Midis Setup'")
 
         canvas = matrix.SwapOnVSync(canvas)
+        matrix.Clear()
+        del matrix
         time.sleep(2)
     except Exception as e:
         print(f"Display error: {e}")
