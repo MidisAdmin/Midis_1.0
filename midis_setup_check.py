@@ -21,6 +21,7 @@ def show_setup_screen():
         options.hardware_mapping = 'adafruit-hat'
         options.gpio_slowdown = 4
         options.disable_hardware_pulsing = True
+        options.drop_privileges = 0 
 
         matrix = RGBMatrix(options=options)
         canvas = matrix.CreateFrameCanvas()
