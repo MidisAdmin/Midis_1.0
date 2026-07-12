@@ -21,7 +21,7 @@ def show_setup_screen():
         options.hardware_mapping = 'adafruit-hat'
         options.gpio_slowdown = 4
         options.disable_hardware_pulsing = True
-        options.drop_privileges = 0 
+        options.drop_privileges = 0
 
         matrix = RGBMatrix(options=options)
         canvas = matrix.CreateFrameCanvas()
@@ -41,14 +41,15 @@ def show_setup_screen():
         graphics.DrawText(canvas, small_font,  1, 29, pink,   "Midis Setup")
 
         canvas = matrix.SwapOnVSync(canvas)
-        matrix.Clear()
-        del matrix
-        time.sleep(2)
+        return matrix
+
     except Exception as e:
         print(f"Display error: {e}")
+        return None
 
-def start_hotspot():
-    subprocess.run(['rfkill', 'unblock', 'wifi'])
+def start_hotspot(matrix=None):
+    rfkill_cmd = ['rfkill', 'unblock', 'wifi']
+    subprocess.run(rfkill_cmd)
     subprocess.run(['nmcli', 'device', 'disconnect', 'wlan0'], capture_output=True)
     subprocess.run(['bash', '-c', '''
 cat > /etc/hostapd/hostapd.conf << EOF
@@ -77,9 +78,11 @@ EOF
     subprocess.run(['systemctl', 'restart', 'dnsmasq'])
     time.sleep(1)
     subprocess.run(['python3', '/home/pi/Midis_1.0/midis_setup_portal.py'])
+    if matrix:
+        matrix.Clear()
 
 if not is_wifi_configured():
     print("No WiFi configured — starting setup mode")
-    show_setup_screen()
-    start_hotspot()
+    matrix = show_setup_screen()
+    start_hotspot(matrix)
     sys.exit(1)
