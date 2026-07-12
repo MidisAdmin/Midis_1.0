@@ -2,20 +2,15 @@ import subprocess
 import os
 import sys
 
-# Check if WiFi is configured, start setup portal if not
-if not os.path.exists('/home/pi/Midis_1.0/midis_config.py'):
-    subprocess.run(['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_check.py'])
+# Check WiFi BEFORE importing rgbmatrix (which drops privileges)
+result = subprocess.run(
+    ['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_check.py'],
+    capture_output=False
+)
+if result.returncode != 0:
     sys.exit(0)
 
-try:
-    from midis_config import WIFI_SSID
-    if not WIFI_SSID:
-        subprocess.run(['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_check.py'])
-        sys.exit(0)
-except ImportError:
-    subprocess.run(['sudo', 'python3', '/home/pi/Midis_1.0/midis_setup_check.py'])
-    sys.exit(0)
-
+# Only reach here if WiFi is configured
 import time
 import importlib
 from rgbmatrix import RGBMatrix, RGBMatrixOptions

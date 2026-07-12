@@ -81,4 +81,4 @@ if not is_wifi_configured():
     print("No WiFi configured — starting setup mode")
     show_setup_screen()
     start_hotspot()
-    sys.exit(0)
+    sys.exit(1)
