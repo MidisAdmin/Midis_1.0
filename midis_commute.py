@@ -19,12 +19,15 @@ def init_fonts():
     med_font.LoadFont("/usr/local/share/midis-fonts/7x14B.bdf")
 
 def is_commute_hours():
-    return True  # TEMP: remove for production
     t = time.localtime()
     if t.tm_wday >= 5:
         return False
-    hour = t.tm_hour
-    return 7 <= hour < 8
+    try:
+        from midis_config import COMMUTE_START_HOUR, COMMUTE_END_HOUR
+    except ImportError:
+        COMMUTE_START_HOUR = 7
+        COMMUTE_END_HOUR = 8
+    return COMMUTE_START_HOUR <= t.tm_hour < COMMUTE_END_HOUR
 
 def should_show():
     return is_commute_hours()
