@@ -93,17 +93,8 @@ try:
         try:
             from midis_config import COMMUTE_ORIGIN
             if midis_commute.is_commute_hours():
-                commute_features = [
-                    (midis_commute, 15),
-                    (midis_weather, 10),
-                    (midis_clock, 10),
-                ]
-                feature, duration = commute_features[current % len(commute_features)]
-                if now - screen_start >= duration:
-                    current = (current + 1) % len(commute_features)
-                    screen_start = now
                 canvas.Clear()
-                feature.draw(canvas, font, small_font)
+                midis_commute.draw(canvas, font, small_font)
                 canvas = matrix.SwapOnVSync(canvas)
                 time.sleep(0.05)
                 continue
