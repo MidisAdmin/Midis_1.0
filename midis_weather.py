@@ -34,7 +34,9 @@ def temp_color(temp):
     else: return (255, 30, 0)
 
 def code_to_icon(code):
-    if code == 0: return "sun"
+    if code == 0:
+        t = time.localtime()
+        return "moon" if t.tm_hour >= 22 or t.tm_hour < 5 else "sun"
     elif code in [1, 2, 3]: return "cloud"
     elif code in [45, 48]: return "fog"
     elif code in [51,53,55,61,63,65,80,81,82]: return "rain"
