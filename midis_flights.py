@@ -16,6 +16,11 @@ except ImportError:
     HOME_AIRPORT = "SAN"
     FR24_API_KEY = ""
 
+try:
+    from midis_config import FLIGHT_MODE
+except ImportError:
+    FLIGHT_MODE = "inbound"
+
 SEARCH_RADIUS = 0.3
 CACHE_FILE = "/home/pi/flight_origin_cache.json"
 CACHE_MAX_AGE_DAYS = 21
@@ -72,24 +77,25 @@ def save_cache():
     except Exception as e:
         print(f"Cache save error: {e}")
 
-def get_cached_origin(callsign):
+def get_cached_entry(callsign):
     with cache_lock:
         entry = origin_cache.get(callsign)
     if not entry:
-        return None
+        return None, None
     try:
         cached_on = datetime.fromisoformat(entry["cached_on"])
         age_days = (datetime.now(timezone.utc) - cached_on).days
         if age_days < CACHE_MAX_AGE_DAYS:
-            return entry["origin"]
+            return entry.get("origin", "???"), entry.get("destination", "???")
     except:
         pass
-    return None
+    return None, None
 
-def set_cached_origin(callsign, origin):
+def set_cached_entry(callsign, origin, destination):
     with cache_lock:
         origin_cache[callsign] = {
             "origin": origin,
+            "destination": destination,
             "cached_on": datetime.now(timezone.utc).isoformat()
         }
     save_cache()
@@ -105,9 +111,9 @@ def calculate_distance_km(lat1, lon1, lat2, lon2):
     a = (math.sin(d_lat/2)**2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(d_lon/2)**2)
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
-def get_origin_fr24(callsign):
+def get_flight_data_fr24(callsign):
     if not FR24_API_KEY:
-        return "???"
+        return "???", "???"
     try:
         url = "https://fr24api.flightradar24.com/api/live/flight-positions/full?callsigns=" + callsign
         headers = {
@@ -117,16 +123,19 @@ def get_origin_fr24(callsign):
         }
         r = requests.get(url, headers=headers, timeout=10)
         if r.status_code in [402, 429]:
-            return "???"
+            return "???", "???"
         data = r.json()
         for f in data.get("data", []):
             origin = f.get("orig_iata", "") or "???"
+            destination = f.get("dest_iata", "") or "???"
             if origin.startswith("K") and len(origin) == 4:
                 origin = origin[1:]
-            return origin
+            if destination.startswith("K") and len(destination) == 4:
+                destination = destination[1:]
+            return origin, destination
     except:
         pass
-    return "???"
+    return "???", "???"
 
 def fetch_flights_thread():
     global flight_list, last_fetch, is_fetching
@@ -162,24 +171,30 @@ def fetch_flights_thread():
                     continue
 
                 # Check cache first, only call FR24 if not cached
-                origin = get_cached_origin(callsign)
+                origin, destination = get_cached_entry(callsign)
                 if origin is None:
                     print(f"Cache miss — looking up {callsign} via FR24")
-                    origin = get_origin_fr24(callsign)
-                    set_cached_origin(callsign, origin)
+                    origin, destination = get_flight_data_fr24(callsign)
+                    set_cached_entry(callsign, origin, destination)
                     time.sleep(0.5)
                 else:
-                    print(f"Cache hit — {callsign}: {origin}")
+                    print(f"Cache hit — {callsign}: {origin} > {destination}")
 
-                dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
-                if origin == HOME_AIRPORT:
-                    continue
+                # Filter based on FLIGHT_MODE
                 if origin == "TIJ":
                     continue
+                if FLIGHT_MODE == "inbound" and destination != HOME_AIRPORT:
+                    continue
+                elif FLIGHT_MODE == "outbound" and origin != HOME_AIRPORT:
+                    continue
+                # "both" shows everything
+
+                dist = calculate_distance_km(HOME_LAT, HOME_LON, lat, lon)
 
                 found.append({
                     "callsign": callsign,
                     "origin": origin,
+                    "destination": destination,
                     "altitude": altitude,
                     "speed": speed,
                     "distance_mi": round(dist * 0.621371, 1)
@@ -244,8 +259,10 @@ def draw(canvas, font, small_font):
         graphics.DrawText(canvas, route_font, x, 10, graphics.Color(148, 0, 211), char)
         x += 7
 
+    # Show origin > destination
+    route = f["origin"] + ">" + f["destination"]
     x = 2
-    for char in f["origin"] + ">" + HOME_AIRPORT:
+    for char in route:
         graphics.DrawText(canvas, route_font, x, 22, graphics.Color(255, 160, 0), char)
         x += 7
 

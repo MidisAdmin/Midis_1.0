@@ -5,9 +5,9 @@ import time
 
 def is_wifi_configured():
     try:
-        from midis_config import WIFI_SSID, WIFI_PASSWORD
-        return bool(WIFI_SSID and WIFI_PASSWORD)
-    except ImportError:
+        from midis_config import WIFI_SSID
+        return bool(WIFI_SSID and WIFI_SSID.strip())
+    except:
         return False
 
 def show_setup_screen():
