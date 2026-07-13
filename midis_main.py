@@ -18,6 +18,9 @@ from rgbmatrix import graphics
 from midis_config import MODULES
 import midis_forecast
 import midis_baseball
+import midis_commute
+import midis_weather
+import midis_clock
 
 subprocess.run(["sudo", "python3", "/home/pi/Midis_1.0/midis_splash.py"])
 
@@ -85,6 +88,27 @@ try:
             canvas = matrix.SwapOnVSync(canvas)
             time.sleep(0.05)
             continue
+
+        # Commute priority mode — only on units with COMMUTE_ORIGIN in config
+        try:
+            from midis_config import COMMUTE_ORIGIN
+            if midis_commute.is_commute_hours():
+                commute_features = [
+                    (midis_commute, 15),
+                    (midis_weather, 10),
+                    (midis_clock, 10),
+                ]
+                feature, duration = commute_features[current % len(commute_features)]
+                if now - screen_start >= duration:
+                    current = (current + 1) % len(commute_features)
+                    screen_start = now
+                canvas.Clear()
+                feature.draw(canvas, font, small_font)
+                canvas = matrix.SwapOnVSync(canvas)
+                time.sleep(0.05)
+                continue
+        except ImportError:
+            pass
 
         if not FEATURES:
             time.sleep(1)
