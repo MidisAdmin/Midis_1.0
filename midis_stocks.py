@@ -36,20 +36,20 @@ def get_stock():
         print(f"Stock error: {e}")
 
 def is_trading_hours():
-    t = time.gmtime()
+    t = time.localtime()
     if t.tm_wday >= 5:
         return False
     minutes = t.tm_hour * 60 + t.tm_min
     return 14 * 60 + 30 <= minutes <= 21 * 60
 
 def should_show():
-    return time.gmtime().tm_wday < 5  # False on weekends
+    return time.localtime().tm_wday < 5  # False on weekends
 
 def draw(canvas, font, small_font):
     global stock_data, last_fetch, med_font, change_font
 
     # Skip on weekends
-    if time.gmtime().tm_wday >= 5:
+    if time.localtime().tm_wday >= 5:
         return
 
     if med_font is None:
