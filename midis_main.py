@@ -90,13 +90,17 @@ try:
             time.sleep(1)
             continue
 
-        feature, duration = FEATURES[current]
+        feature, duration = FEATURES[current % len(FEATURES)]
         if now - screen_start >= duration:
             current = (current + 1) % len(FEATURES)
             screen_start = now
 
         canvas.Clear()
-        feature.draw(canvas, font, small_font)
+        if hasattr(feature, 'should_show') and not feature.should_show():
+            current = (current + 1) % len(FEATURES)
+            screen_start = now
+        else:
+            feature.draw(canvas, font, small_font)
         canvas = matrix.SwapOnVSync(canvas)
         time.sleep(0.05)
 

@@ -42,6 +42,9 @@ def is_trading_hours():
     minutes = t.tm_hour * 60 + t.tm_min
     return 14 * 60 + 30 <= minutes <= 21 * 60
 
+def should_show():
+    return time.gmtime().tm_wday < 5  # False on weekends
+
 def draw(canvas, font, small_font):
     global stock_data, last_fetch, med_font, change_font
 
