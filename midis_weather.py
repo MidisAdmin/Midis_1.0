@@ -72,7 +72,7 @@ def draw(canvas, font, small_font):
             canvas.SetPixel(dot_x + dx, dot_y + dy, r, g, b)
         draw_icon(canvas, code_to_icon(code), 42, 5)
         graphics.DrawText(canvas, small_font, 3, 30, graphics.Color(255, 60, 60), f"H:{high}")
-        l_x = 29 if temp >= 100 else 26
+        l_x = 29 if high >= 100 else 26
         graphics.DrawText(canvas, small_font, l_x, 30, graphics.Color(100, 150, 255), f"L:{low}")
     else:
         graphics.DrawText(canvas, small_font, 2, 16, graphics.Color(255, 0, 0), "No signal")
