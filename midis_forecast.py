@@ -65,19 +65,28 @@ def draw(canvas, font, small_font):
 
     t_now, t_3hr, t_6hr, now_hour, uv_now, uv_max, sunset_hour, sunrise_hour = forecast_data
 
+    hot = t_now >= 100 or t_3hr >= 100 or t_6hr >= 100
+
     r, g, b = temp_color(now_hour, 1.0)
     graphics.DrawText(canvas, font, 2, 21, graphics.Color(r, g, b), str(t_now))
 
-    r, g, b = temp_color(now_hour + 3, 0.7)
-    graphics.DrawText(canvas, med_font, 26, 20, graphics.Color(r, g, b), str(t_3hr))
+    if hot:
+        # Only show 3H, shifted right
+        r, g, b = temp_color(now_hour + 3, 0.7)
+        graphics.DrawText(canvas, med_font, 38, 20, graphics.Color(r, g, b), str(t_3hr))
+        graphics.DrawText(canvas, small_font, 40, 30, graphics.Color(100, 100, 100), "3H")
+    else:
+        r, g, b = temp_color(now_hour + 3, 0.7)
+        graphics.DrawText(canvas, med_font, 26, 20, graphics.Color(r, g, b), str(t_3hr))
 
-    r, g, b = temp_color(now_hour + 6, 0.5)
-    graphics.DrawText(canvas, med_font, 46, 20, graphics.Color(r, g, b), str(t_6hr))
+        r, g, b = temp_color(now_hour + 6, 0.5)
+        graphics.DrawText(canvas, med_font, 46, 20, graphics.Color(r, g, b), str(t_6hr))
+
+        graphics.DrawText(canvas, small_font, 28, 30, graphics.Color(100, 100, 100), "3H")
+        graphics.DrawText(canvas, small_font, 48, 30, graphics.Color(100, 100, 100), "6H")
 
     uv_str = f"UV{uv_now}/{uv_max}"
     uv_x = 64 - len(uv_str) * 5 - 2
     graphics.DrawText(canvas, small_font, uv_x, 8, graphics.Color(100, 100, 100), uv_str)
 
     graphics.DrawText(canvas, small_font, 4, 30, graphics.Color(100, 100, 100), "NOW")
-    graphics.DrawText(canvas, small_font, 28, 30, graphics.Color(100, 100, 100), "3H")
-    graphics.DrawText(canvas, small_font, 48, 30, graphics.Color(100, 100, 100), "6H")
