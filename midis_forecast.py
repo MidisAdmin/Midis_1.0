@@ -67,15 +67,17 @@ def draw(canvas, font, small_font):
 
     hot = t_now >= 100 or t_3hr >= 100 or t_6hr >= 100
 
+    # NOW temp — always shown
     r, g, b = temp_color(now_hour, 1.0)
     graphics.DrawText(canvas, font, 2, 21, graphics.Color(r, g, b), str(t_now))
 
     if hot:
-        # Only show 3H, shifted right
+        # Only show 3H, shifted right to avoid overlap with 3-digit NOW temp
         r, g, b = temp_color(now_hour + 3, 0.7)
-        graphics.DrawText(canvas, med_font, 38, 20, graphics.Color(r, g, b), str(t_3hr))
-        graphics.DrawText(canvas, small_font, 40, 30, graphics.Color(100, 100, 100), "3H")
+        graphics.DrawText(canvas, med_font, 41, 20, graphics.Color(r, g, b), str(t_3hr))
+        graphics.DrawText(canvas, small_font, 43, 30, graphics.Color(100, 100, 100), "3H")
     else:
+        # Show both 3H and 6H
         r, g, b = temp_color(now_hour + 3, 0.7)
         graphics.DrawText(canvas, med_font, 26, 20, graphics.Color(r, g, b), str(t_3hr))
 

@@ -71,8 +71,8 @@ def draw(canvas, font, small_font):
         for dx, dy in [(1,0),(2,0),(0,1),(3,1),(0,2),(3,2),(1,3),(2,3)]:
             canvas.SetPixel(dot_x + dx, dot_y + dy, r, g, b)
         draw_icon(canvas, code_to_icon(code), 42, 5)
-        h_x = 6 if temp >= 100 else 3
-        graphics.DrawText(canvas, small_font, h_x, 30, graphics.Color(255, 60, 60), f"H:{high}")
-        graphics.DrawText(canvas, small_font, 26, 30, graphics.Color(100, 150, 255), f"L:{low}")
+        graphics.DrawText(canvas, small_font, 3, 30, graphics.Color(255, 60, 60), f"H:{high}")
+        l_x = 29 if temp >= 100 else 26
+        graphics.DrawText(canvas, small_font, l_x, 30, graphics.Color(100, 150, 255), f"L:{low}")
     else:
         graphics.DrawText(canvas, small_font, 2, 16, graphics.Color(255, 0, 0), "No signal")
