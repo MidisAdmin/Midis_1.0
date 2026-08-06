@@ -18,6 +18,8 @@ from rgbmatrix import graphics
 from midis_config import MODULES
 import midis_forecast
 import midis_baseball
+import midis_nfl
+import midis_nhl
 import midis_commute
 import midis_weather
 import midis_clock
@@ -82,9 +84,28 @@ try:
             matrix.brightness = brightness
             last_brightness = brightness
 
+        # Build list of active sport overrides
+        active_sports = []
         if midis_baseball.games_active():
+            active_sports.append(midis_baseball)
+        try:
+            from midis_config import FOOTBALL_TEAMS
+            if midis_nfl.games_active():
+                active_sports.append(midis_nfl)
+        except ImportError:
+            pass
+        try:
+            from midis_config import HOCKEY_TEAMS
+            if midis_nhl.games_active():
+                active_sports.append(midis_nhl)
+        except ImportError:
+            pass
+
+        if active_sports:
+            sport_index = int(now / 30) % len(active_sports)
+            active_sport = active_sports[sport_index]
             canvas.Clear()
-            midis_baseball.draw(canvas, font, small_font)
+            active_sport.draw(canvas, font, small_font)
             canvas = matrix.SwapOnVSync(canvas)
             time.sleep(0.05)
             continue
