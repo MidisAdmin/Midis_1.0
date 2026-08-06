@@ -169,4 +169,4 @@ def draw(canvas, font, small_font):
     graphics.DrawText(canvas, med_font, 44, 11, graphics.Color(*away_color), str(away_score))
     graphics.DrawText(canvas, med_font, 2, 23, graphics.Color(*home_color), home)
     graphics.DrawText(canvas, med_font, 44, 23, graphics.Color(*home_color), str(home_score))
-    graphics.DrawText(canvas, small_font, 2, 30, graphics.Color(255, 60, 60), status)ß
+    graphics.DrawText(canvas, small_font, 2, 30, graphics.Color(255, 60, 60), status)
